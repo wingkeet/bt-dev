@@ -106,7 +106,7 @@ static int write_bytes(int fd, const void *buf, ssize_t n)
 static vector<string> read_headers(int cfd)
 {
     const int max_length {1024}; // guard against malformed input
-    int count{};
+    int count {};
     char current {}, previous {};
     vector<string> headers;
     string header;
@@ -261,7 +261,7 @@ static int wait_client(int sfd)
         close(cfd);
         return -1;
     }
-    for (const auto& [k, v]: map) {
+    for (const auto& [k, v] : map) {
         cout << "  " << k << ':' << v << endl;
     }
 
