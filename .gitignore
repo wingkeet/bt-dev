@@ -1,0 +1,5 @@
+info.txt
+bin/
+transfer/
+!transfer/README
+.vscode/
