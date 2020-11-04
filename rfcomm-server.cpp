@@ -75,12 +75,12 @@ static void print_remote(const bdaddr_t *bdaddr)
     const int dev_id = hci_get_route(NULL);
     const int dd = hci_open_dev(dev_id);
     char name[248] {};
-    char buf[1024] {};
+    char addr[20] {};
 
     if (hci_read_remote_name(dd, bdaddr, sizeof(name), name, 0) < 0)
         strcpy(name, "[unknown]");
-    ba2str(bdaddr, buf);
-    printf("Accepted connection from %s %s\n", buf, name);
+    ba2str(bdaddr, addr);
+    printf("Accepted connection from %s %s\n", addr, name);
     close(dd);
 }
 
