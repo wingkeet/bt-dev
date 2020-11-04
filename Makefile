@@ -1,16 +1,16 @@
-all: scan rfcomm-server btput btget
+all: bin/scan bin/rfcomm-server bin/btput bin/btget
 
-scan: scan.cpp
+bin/scan: scan.cpp
 	g++ scan.cpp -o bin/scan -lbluetooth -std=c++17 -Wall
 
-rfcomm-server: rfcomm-server.cpp
+bin/rfcomm-server: rfcomm-server.cpp
 	g++ rfcomm-server.cpp -o bin/rfcomm-server -lbluetooth -std=c++17 -Wall
 
-btput: btput.cpp
+bin/btput: btput.cpp
 	g++ btput.cpp -o bin/btput -lbluetooth -std=c++17 -Wall
 
-btget: btget.cpp
+bin/btget: btget.cpp
 	g++ btget.cpp -o bin/btget -lbluetooth -std=c++17 -Wall
 
 clean:
-	rm -f bin/*
+	rm -f bin/scan bin/rfcomm-server bin/btput bin/btget
