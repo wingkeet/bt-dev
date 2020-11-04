@@ -14,8 +14,8 @@ $ sudo apt install libbluetooth-dev
 $ sudo updatedb && locate bluetooth.h
 ```
 
-I'm using BlueZ version 5.53, which is included in Ubuntu 20.04 LTS.
-To find out the version that you have, use this command:
+I'm using [BlueZ](http://www.bluez.org/) version 5.53, which is included in
+Ubuntu 20.04 LTS. To find out the version that you have, use this command:
 ```
 $ bluetoothctl -v
 ```
