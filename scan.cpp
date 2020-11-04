@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    for (int i = 0; i < num_rsp; i++) {
-        char name[248] {0};
+    for (int i {}; i < num_rsp; i++) {
+        char name[248] {};
 
         ba2str(&ii[i].bdaddr, addr);
         // hci_read_remote_name() is equivalent to 'hcitool name <bdaddr>'
