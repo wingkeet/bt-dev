@@ -17,7 +17,6 @@
 
 int main(int argc, char *argv[])
 {
-    char addr[20] {};
     const int dev_id = hci_get_route(NULL);
     const int sock = hci_open_dev(dev_id);
     if (dev_id < 0 || sock < 0) {
@@ -34,10 +33,12 @@ int main(int argc, char *argv[])
     const int num_rsp = hci_inquiry(dev_id, len, max_rsp, NULL, &ii, flags);
     if (num_rsp < 0) {
         perror("hci_inquiry");
+        close(sock);
         return EXIT_FAILURE;
     }
 
     for (int i {}; i < num_rsp; i++) {
+        char addr[20] {};
         char name[248] {};
 
         ba2str(&ii[i].bdaddr, addr);
