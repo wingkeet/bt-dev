@@ -308,7 +308,7 @@ int main(int argc, char *argv[])
 
     // Bind socket to the first available local bluetooth adapter
     const bdaddr_t BDADDR_ANY_INITIALIZER {};
-    struct sockaddr_rc loc_addr {0};
+    struct sockaddr_rc loc_addr {};
     loc_addr.rc_family = AF_BLUETOOTH;
     loc_addr.rc_bdaddr = BDADDR_ANY_INITIALIZER;
     loc_addr.rc_channel = options.channel;
