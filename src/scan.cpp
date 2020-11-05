@@ -45,7 +45,8 @@ int main(int argc, char *argv[])
         // hci_read_remote_name() is equivalent to 'hcitool name <bdaddr>'
         if (hci_read_remote_name(sock, &ii[i].bdaddr, sizeof(name), name, 0) < 0)
             strcpy(name, "[unknown]");
-        printf("%s 0x%02X%02X%02X %s\n", addr, ii[i].dev_class[2], ii[i].dev_class[1], ii[i].dev_class[0], name);
+        printf("%s 0x%02X%02X%02X %s\n", addr, ii[i].dev_class[2],
+            ii[i].dev_class[1], ii[i].dev_class[0], name);
     }
 
     free(ii);
