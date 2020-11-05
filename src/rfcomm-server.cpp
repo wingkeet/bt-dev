@@ -146,6 +146,7 @@ static std::map<string, string> parse_headers(const vector<string>& headers)
     return map;
 }
 
+// Write response headers to CFD. Return 0 on success, or -1 on error.
 static int write_res_headers(int cfd, int status_code, ssize_t filesize = 0)
 {
     char headers[128] {};
