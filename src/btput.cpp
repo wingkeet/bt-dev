@@ -62,8 +62,8 @@ static int parse_options(int argc, char *argv[], struct options_t *options)
 
     const int num_mandatory_args = 2;
     if (optind + num_mandatory_args != argc) {
-        cerr << "Usage: btput [OPTION] BDADDR FILENAME" << endl;
-        cerr << "Send FILENAME to BDADDR." << endl;
+        cerr << "Usage: btput [OPTION] BDADDR PATHNAME" << endl;
+        cerr << "Send PATHNAME to BDADDR." << endl;
         return 1;
     }
 
@@ -99,16 +99,14 @@ static void print_remote(const bdaddr_t *bdaddr, uint8_t channel)
 // Write N bytes of BUF to FD. Return 0 on success, or -1 on error.
 static int write_bytes(int fd, const void *buf, ssize_t n)
 {
-    // Because the number of bytes written may be less than
-    // the number of bytes we want to write, we need a loop
+    // Because the number of bytes actually written may be less
+    // than the number of bytes we want to write, we need a loop
     // to write all of the bytes.
-    for (ssize_t total_bytes_written {}; total_bytes_written < n;) {
-        const ssize_t bytes_written = write(fd,
-            (const uint8_t *) buf + total_bytes_written,
-            n - total_bytes_written);
-        if (bytes_written < 1)
+    for (ssize_t total {}; total < n;) {
+        const ssize_t actual = write(fd, (const uint8_t *) buf + total, n - total);
+        if (actual < 1)
             return -1;
-        total_bytes_written += bytes_written;
+        total += actual;
     }
 
     return 0;
@@ -177,7 +175,8 @@ static int put_file(int sfd, std::string_view pathname)
 
     // Write request headers
     char headers[512] {};
-    snprintf(headers, sizeof(headers), "method:PUT\npathname:%s\ncontent-length:%ld\n\n", pathname.data(), filesize);
+    snprintf(headers, sizeof(headers), "method:PUT\npathname:%s\ncontent-length:%ld\n\n",
+        pathname.data(), filesize);
     if (write_bytes(sfd, headers, strlen(headers)) != 0) {
         perror("\nwrite socket");
         close(fin);

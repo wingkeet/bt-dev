@@ -87,16 +87,14 @@ static void print_remote(const bdaddr_t *bdaddr)
 // Write N bytes of BUF to FD. Return 0 on success, or -1 on error.
 static int write_bytes(int fd, const void *buf, ssize_t n)
 {
-    // Because the number of bytes written may be less than
-    // the number of bytes we want to write, we need a loop
+    // Because the number of bytes actually written may be less
+    // than the number of bytes we want to write, we need a loop
     // to write all of the bytes.
-    for (ssize_t total_bytes_written {}; total_bytes_written < n;) {
-        const ssize_t bytes_written = write(fd,
-            (const uint8_t *) buf + total_bytes_written,
-            n - total_bytes_written);
-        if (bytes_written < 1)
+    for (ssize_t total {}; total < n;) {
+        const ssize_t actual = write(fd, (const uint8_t *) buf + total, n - total);
+        if (actual < 1)
             return -1;
-        total_bytes_written += bytes_written;
+        total += actual;
     }
 
     return 0;
@@ -151,10 +149,13 @@ static int write_res_headers(int cfd, int status_code, ssize_t filesize = 0)
 {
     char headers[128] {};
 
-    if (filesize > 0)
-        snprintf(headers, sizeof(headers), "status:%d\ncontent-length:%ld\n\n", status_code, filesize);
-    else
+    if (filesize > 0) {
+        snprintf(headers, sizeof(headers), "status:%d\ncontent-length:%ld\n\n",
+            status_code, filesize);
+    }
+    else {
         snprintf(headers, sizeof(headers), "status:%d\n\n", status_code);
+    }
 
     if (write_bytes(cfd, headers, strlen(headers)) != 0) {
         perror("\nwrite socket");
