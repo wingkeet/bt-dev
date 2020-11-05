@@ -158,8 +158,8 @@ static std::map<string, string> parse_headers(const vector<string>& headers)
     return map;
 }
 
-// Read from FILENAME and write to SFD. Return 0 on success, or -1 on error.
-static int put_file(std::string_view pathname, int sfd)
+// Read from PATHNAME and write to SFD. Return 0 on success, or -1 on error.
+static int put_file(int sfd, std::string_view pathname)
 {
     // Open file and get file size
     const int fin = open(pathname.data(), O_RDONLY);
@@ -249,7 +249,7 @@ int main(int argc, char *argv[])
 
     // Send file to remote device
     if (options.pathname != NULL) {
-        put_file(options.pathname, sfd);
+        put_file(sfd, options.pathname);
     }
 
     close(sfd);

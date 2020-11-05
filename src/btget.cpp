@@ -158,7 +158,7 @@ static std::map<string, string> parse_headers(const vector<string>& headers)
     return map;
 }
 
-// Read from SFD and write to FILENAME. Return 0 on success, or -1 on error.
+// Read from SFD and write to PATHNAME. Return 0 on success, or -1 on error.
 static int get_file(int sfd, std::string_view pathname)
 {
     // Write request headers
