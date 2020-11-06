@@ -102,11 +102,10 @@ static int write_bytes(int fd, const void *buf, ssize_t n)
     // Because the number of bytes actually written may be less
     // than the number of bytes we want to write, we need a loop
     // to write all of the bytes.
-    for (ssize_t total {}; total < n;) {
-        const ssize_t actual = write(fd, (const uint8_t *) buf + total, n - total);
+    for (ssize_t total {}, actual {}; total < n; total += actual) {
+        actual = write(fd, (const uint8_t *) buf + total, n - total);
         if (actual < 1)
             return -1;
-        total += actual;
     }
 
     return 0;

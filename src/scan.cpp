@@ -1,11 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_lib.h>
-
 /**
  * This program scans nearby bluetooth devices and displays results
  * in this format: <bdaddr> <device-class> <friendly-name>
@@ -14,6 +6,14 @@
  * Device classes are defined in:
  * https://www.bluetooth.com/specifications/assigned-numbers/baseband/
  */
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/hci.h>
+#include <bluetooth/hci_lib.h>
 
 int main(int argc, char *argv[])
 {
