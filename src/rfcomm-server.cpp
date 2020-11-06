@@ -274,9 +274,10 @@ namespace {
             // Call either put_file() or get_file(), depending on the "method" header
             const std::string_view method {map.at("method")};
             if (method == "PUT") {
-                const std::filesystem::path p {map.at("pathname")};
-                const std::filesystem::path dir {"transfer"};
-                const std::filesystem::path pathname {dir / p.filename()};
+                namespace fs = std::filesystem;
+                const fs::path p {map.at("pathname")};
+                const fs::path dir {"transfer"};
+                const fs::path pathname {dir / p.filename()};
                 const size_t filesize {std::stoul(map.at("content-length"))};
                 status = put_file(cfd, pathname.string(), filesize);
             }
