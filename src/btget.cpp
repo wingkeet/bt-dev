@@ -19,203 +19,207 @@
 #include <bluetooth/hci_lib.h>
 #include <bluetooth/rfcomm.h>
 
-//using namespace std;
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::string;
-using std::vector;
+namespace {
+    // Everything within this unnamed namespace has internal linkage.
+    // The practice of using 'static' is de facto deprecated.
 
-const uint8_t DEFAULT_RFCOMM_CHANNEL {18};
+    using std::cout;
+    using std::cerr;
+    using std::endl;
+    using std::string;
+    using std::vector;
 
-struct options_t {
-    uint8_t channel;
-    const char *bdaddr;
-    const char *pathname;
-};
+    const uint8_t DEFAULT_RFCOMM_CHANNEL {18};
 
-// https://www.gnu.org/software/libc/manual/html_node/Using-Getopt.html
-static int parse_options(int argc, char *argv[], struct options_t *options)
-{
-    char *cvalue = NULL;
-    int c;
+    struct options_t {
+        uint8_t channel;
+        const char *bdaddr;
+        const char *pathname;
+    };
 
-    opterr = 0; // don't print error message to stderr
+    // https://www.gnu.org/software/libc/manual/html_node/Using-Getopt.html
+    int parse_options(int argc, char *argv[], struct options_t *options)
+    {
+        char *cvalue = NULL;
+        int c;
 
-    while ((c = getopt(argc, argv, "c:")) != -1) {
-        switch (c) {
-        case 'c':
-            cvalue = optarg;
-            break;
-        case '?':
-            if (optopt == 'c')
-                fprintf(stderr, "Option -%c requires an argument.\n", optopt);
-            else if (std::isprint(optopt))
-                fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-            else
-                fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+        opterr = 0; // don't print error message to stderr
+
+        while ((c = getopt(argc, argv, "c:")) != -1) {
+            switch (c) {
+            case 'c':
+                cvalue = optarg;
+                break;
+            case '?':
+                if (optopt == 'c')
+                    fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+                else if (std::isprint(optopt))
+                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                else
+                    fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+                return 1;
+            default:
+                abort();
+            }
+        }
+
+        const int num_mandatory_args = 2;
+        if (optind + num_mandatory_args != argc) {
+            cerr << "Usage: btget [OPTION] BDADDR PATHNAME" << endl;
+            cerr << "Get PATHNAME from BDADDR." << endl;
             return 1;
-        default:
-            abort();
         }
+
+        // Set default options
+        options->channel = DEFAULT_RFCOMM_CHANNEL;
+        options->bdaddr = NULL;
+        options->pathname = NULL;
+
+        // Override default options with user-specified ones
+        if (cvalue != NULL)
+            options->channel = std::stoi(cvalue);
+        options->bdaddr = argv[optind];
+        options->pathname = argv[optind + 1];
+
+        return 0;
     }
 
-    const int num_mandatory_args = 2;
-    if (optind + num_mandatory_args != argc) {
-        cerr << "Usage: btget [OPTION] BDADDR PATHNAME" << endl;
-        cerr << "Get PATHNAME from BDADDR." << endl;
-        return 1;
+    // Print MAC address and name of remote device, and the RFCOMM channel we are using
+    void print_remote(const bdaddr_t *bdaddr, uint8_t channel)
+    {
+        const int dev_id = hci_get_route(NULL);
+        const int dd = hci_open_dev(dev_id);
+        char name[248] {};
+        char addr[20] {};
+
+        if (hci_read_remote_name(dd, bdaddr, sizeof(name), name, 0) < 0)
+            strcpy(name, "[unknown]");
+        ba2str(bdaddr, addr);
+        printf("Connected to %s %s on channel %u\n", addr, name, channel);
+        close(dd);
     }
 
-    // Set default options
-    options->channel = DEFAULT_RFCOMM_CHANNEL;
-    options->bdaddr = NULL;
-    options->pathname = NULL;
-
-    // Override default options with user-specified ones
-    if (cvalue != NULL)
-        options->channel = std::stoi(cvalue);
-    options->bdaddr = argv[optind];
-    options->pathname = argv[optind + 1];
-
-    return 0;
-}
-
-// Print MAC address and name of remote device, and the RFCOMM channel we are using
-static void print_remote(const bdaddr_t *bdaddr, uint8_t channel)
-{
-    const int dev_id = hci_get_route(NULL);
-    const int dd = hci_open_dev(dev_id);
-    char name[248] {};
-    char addr[20] {};
-
-    if (hci_read_remote_name(dd, bdaddr, sizeof(name), name, 0) < 0)
-        strcpy(name, "[unknown]");
-    ba2str(bdaddr, addr);
-    printf("Connected to %s %s on channel %u\n", addr, name, channel);
-    close(dd);
-}
-
-// Write N bytes of BUF to FD. Return 0 on success, or -1 on error.
-static int write_bytes(int fd, const void *buf, ssize_t n)
-{
-    // Because the number of bytes actually written may be less
-    // than the number of bytes we want to write, we need a loop
-    // to write all of the bytes.
-    for (ssize_t total {}, actual {}; total < n; total += actual) {
-        actual = write(fd, (const uint8_t *) buf + total, n - total);
-        if (actual < 1)
-            return -1;
-    }
-
-    return 0;
-}
-
-// Read header lines from CFD and return them. Newlines are discarded.
-static vector<string> read_headers(int cfd)
-{
-    const int max_length {1024}; // guard against malformed input
-    int count {};
-    char current {}, previous {};
-    vector<string> headers;
-    string header;
-
-    while (count < max_length && read(cfd, &current, 1) == 1) {
-        count++;
-        if (current != '\n') {
-            header += current;
+    // Write N bytes of BUF to FD. Return 0 on success, or -1 on error.
+    int write_bytes(int fd, const void *buf, ssize_t n)
+    {
+        // Because the number of bytes actually written may be less
+        // than the number of bytes we want to write, we need a loop
+        // to write all of the bytes.
+        for (ssize_t total {}, actual {}; total < n; total += actual) {
+            actual = write(fd, (const uint8_t *) buf + total, n - total);
+            if (actual < 1)
+                return -1;
         }
-        else {
-            if (previous != '\n') {
-                headers.push_back(header);
-                header.clear();
+
+        return 0;
+    }
+
+    // Read header lines from CFD and return them. Newlines are discarded.
+    vector<string> read_headers(int cfd)
+    {
+        const int max_length {1024}; // guard against malformed input
+        int count {};
+        char current {}, previous {};
+        vector<string> headers;
+        string header;
+
+        while (count < max_length && read(cfd, &current, 1) == 1) {
+            count++;
+            if (current != '\n') {
+                header += current;
             }
             else {
-                return headers;
+                if (previous != '\n') {
+                    headers.push_back(header);
+                    header.clear();
+                }
+                else {
+                    return headers;
+                }
+            }
+            previous = current;
+        }
+
+        return {}; // return empty vector on error
+    }
+
+    // Parse HEADERS and return map of key-value pairs.
+    std::map<string, string> parse_headers(const vector<string>& headers)
+    {
+        std::map<string, string> map;
+        for (const auto& h : headers) {
+            const std::size_t index {h.find_first_of(':')};
+            if (index != string::npos) {
+                const string k {h.substr(0, index)};
+                const string v {h.substr(index + 1)};
+                map[k] = v;
             }
         }
-        previous = current;
+        return map;
     }
 
-    return {}; // return empty vector on error
-}
-
-// Parse HEADERS and return map of key-value pairs.
-static std::map<string, string> parse_headers(const vector<string>& headers)
-{
-    std::map<string, string> map;
-    for (const auto& h : headers) {
-        const std::size_t index {h.find_first_of(':')};
-        if (index != string::npos) {
-            const string k {h.substr(0, index)};
-            const string v {h.substr(index + 1)};
-            map[k] = v;
-        }
-    }
-    return map;
-}
-
-// Read from SFD and write to PATHNAME. Return 0 on success, or -1 on error.
-static int get_file(int sfd, std::string_view pathname)
-{
-    // Write request headers
-    char headers[512] {};
-    snprintf(headers, sizeof(headers), "method:GET\npathname:%s\n\n", pathname.data());
-    if (write_bytes(sfd, headers, strlen(headers)) != 0) {
-        perror("\nwrite socket");
-        return -1;
-    }
-
-    // Read and parse response headers sent by server
-    const auto res_headers {read_headers(sfd)};
-    if (res_headers.size() == 0) {
-        cerr << "read_headers error" << endl;
-        return -1;
-    }
-    const auto map {parse_headers(res_headers)};
-    if (map.empty()) {
-        cerr << "parse_headers error" << endl;
-        return -1;
-    }
-    for (const auto& [k, v] : map) {
-        cout << "  " << k << ':' << v << endl;
-    }
-
-    ssize_t filesize {};
-    try {
-        const int status_code {std::stoi(map.at("status"))};
-        if (status_code != 200) {
+    // Read from SFD and write to PATHNAME. Return 0 on success, or -1 on error.
+    int get_file(int sfd, std::string_view pathname)
+    {
+        // Write request headers
+        char headers[512] {};
+        snprintf(headers, sizeof(headers), "method:GET\npathname:%s\n\n", pathname.data());
+        if (write_bytes(sfd, headers, strlen(headers)) != 0) {
+            perror("\nwrite socket");
             return -1;
         }
-        filesize = std::stol(map.at("content-length"));
-    }
-    catch (const std::out_of_range& ex) {
-        return -1;
-    }
 
-    // Open disk file for writing
-    const std::filesystem::path dir {"transfer"}, file {pathname};
-    std::ofstream fout {dir / file.filename(), std::ios::out | std::ios::binary};
-    if (!fout.is_open()) {
-        cerr << "open file failed" << endl;
-        return -1;
-    }
+        // Read and parse response headers sent by server
+        const auto res_headers {read_headers(sfd)};
+        if (res_headers.size() == 0) {
+            cerr << "read_headers error" << endl;
+            return -1;
+        }
+        const auto map {parse_headers(res_headers)};
+        if (map.empty()) {
+            cerr << "parse_headers error" << endl;
+            return -1;
+        }
+        for (const auto& [k, v] : map) {
+            cout << "  " << k << ':' << v << endl;
+        }
 
-    // Read data from server and write to file
-    ssize_t bytes_read;
-    ssize_t bytes_done {};
-    char buf[2 * 1024] {};
-    while ((bytes_read = read(sfd, buf, sizeof(buf))) > 0) {
-        fout.write(buf, bytes_read);
-        bytes_done += bytes_read;
-        cerr << '\r' << bytes_done << ' ' << bytes_done * 100 / filesize << '%';
-    }
-    cerr << endl;
+        ssize_t filesize {};
+        try {
+            const int status_code {std::stoi(map.at("status"))};
+            if (status_code != 200) {
+                return -1;
+            }
+            filesize = std::stol(map.at("content-length"));
+        }
+        catch (const std::out_of_range& ex) {
+            return -1;
+        }
 
-    // Cleanup
-    fout.close();
-    return 0;
-}
+        // Open disk file for writing
+        const std::filesystem::path dir {"transfer"}, file {pathname};
+        std::ofstream fout {dir / file.filename(), std::ios::out | std::ios::binary};
+        if (!fout.is_open()) {
+            cerr << "open file failed" << endl;
+            return -1;
+        }
+
+        // Read data from server and write to file
+        ssize_t bytes_read;
+        ssize_t bytes_done {};
+        char buf[2 * 1024] {};
+        while ((bytes_read = read(sfd, buf, sizeof(buf))) > 0) {
+            fout.write(buf, bytes_read);
+            bytes_done += bytes_read;
+            cerr << '\r' << bytes_done << ' ' << bytes_done * 100 / filesize << '%';
+        }
+        cerr << endl;
+
+        // Cleanup
+        fout.close();
+        return 0;
+    }
+} // unnamed namespace
 
 int main(int argc, char *argv[])
 {
