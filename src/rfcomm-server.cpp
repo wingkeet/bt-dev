@@ -282,7 +282,7 @@ namespace {
                 status = put_file(cfd, pathname.string(), filesize);
             }
             else if (method == "GET") {
-                const string pathname {map.at("pathname")};
+                const std::string_view pathname {map.at("pathname")};
                 status = get_file(cfd, pathname);
             }
             else {
