@@ -184,6 +184,7 @@ namespace {
             cout << "  " << k << ':' << v << endl;
         }
 
+        // Check for 200 status code and get file size
         ssize_t filesize {};
         try {
             const int status_code {std::stoi(map.at("status"))};

@@ -201,6 +201,17 @@ namespace {
             cout << "  " << k << ':' << v << endl;
         }
 
+        // Check for 200 status code
+        try {
+            const int status_code {std::stoi(map.at("status"))};
+            if (status_code != 200) {
+                return -1;
+            }
+        }
+        catch (const std::out_of_range& ex) {
+            return -1;
+        }
+
         // Read data from file and send to server
         ssize_t bytes_read;
         ssize_t bytes_done {};
