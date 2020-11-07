@@ -64,11 +64,11 @@ std::map<std::string, std::string>
 common::parse_headers(const std::vector<std::string>& headers)
 {
     std::map<std::string, std::string> map;
-    for (const std::string& h : headers) {
-        const std::size_t index {h.find_first_of(':')};
+    for (const auto& h : headers) {
+        const auto& index {h.find_first_of(':')};
         if (index != std::string::npos) {
-            const std::string k {h.substr(0, index)};
-            const std::string v {h.substr(index + 1)};
+            const auto& k {h.substr(0, index)};
+            const auto& v {h.substr(index + 1)};
             map[k] = v;
         }
     }
