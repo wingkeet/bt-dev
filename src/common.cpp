@@ -3,7 +3,8 @@
 #include "common.h"
 
 // Get string address and friendly name of remote bluetooth device
-std::tuple<std::string, std::string> common::get_remote_bdname(const bdaddr_t *bdaddr)
+std::tuple<std::string, std::string>
+common::get_remote_bdname(const bdaddr_t *bdaddr)
 {
     const int dev_id = hci_get_route(NULL);
     const int dd = hci_open_dev(dev_id);
@@ -59,7 +60,8 @@ std::vector<std::string> common::read_headers(int fd)
 }
 
 // Parse HEADERS and return map of key-value pairs.
-std::map<std::string, std::string> common::parse_headers(const std::vector<std::string>& headers)
+std::map<std::string, std::string>
+common::parse_headers(const std::vector<std::string>& headers)
 {
     std::map<std::string, std::string> map;
     for (const std::string& h : headers) {

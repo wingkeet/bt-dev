@@ -104,13 +104,13 @@ namespace {
         }
 
         // Read and parse response headers sent by server
-        const auto res_headers {common::read_headers(sfd)};
+        const auto& res_headers {common::read_headers(sfd)};
         if (res_headers.size() == 0) {
             cerr << "read_headers error" << endl;
             close(fin);
             return -1;
         }
-        const auto map {common::parse_headers(res_headers)};
+        const auto& map {common::parse_headers(res_headers)};
         if (map.empty()) {
             cerr << "parse_headers error" << endl;
             close(fin);
