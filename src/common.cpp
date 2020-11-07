@@ -31,15 +31,15 @@ int common::write_bytes(int fd, const void *buf, ssize_t n)
     return 0;
 }
 
-// Read header lines from CFD and return them. Newlines are discarded.
-std::vector<std::string> common::read_headers(int cfd)
+// Read header lines from FD and return them. Newlines are discarded.
+std::vector<std::string> common::read_headers(int fd)
 {
-    const int max_length {1024}; // guard against malformed input
+    const int max_length {1024}; // safeguard against malformed input
     int count {};
     char current {}, previous {};
     std::vector<std::string> headers;
     std::string header;
-    while (count < max_length && read(cfd, &current, 1) == 1) {
+    while (count < max_length && read(fd, &current, 1) == 1) {
         count++;
         if (current != '\n') {
             header += current;
