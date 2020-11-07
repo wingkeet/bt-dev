@@ -1,25 +1,21 @@
 #define __cplusplus 201703L
-#include <cctype>
-#include <fstream>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <map>
 #include <string>
 #include <string_view>
 #include <vector>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <sys/socket.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_lib.h>
-#include <bluetooth/rfcomm.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include "common.h"
 
 namespace {
-    // Everything within this unnamed namespace has internal linkage.
+    // Everything inside this unnamed namespace has internal linkage.
     // The practice of using 'static' is de facto deprecated.
 
     using std::cout;
@@ -27,8 +23,6 @@ namespace {
     using std::endl;
     using std::string;
     using std::vector;
-
-    const uint8_t DEFAULT_RFCOMM_CHANNEL {18};
 
     struct options_t {
         uint8_t channel;
@@ -63,87 +57,13 @@ namespace {
         }
 
         // Set default options
-        options->channel = DEFAULT_RFCOMM_CHANNEL;
+        options->channel = common::DEFAULT_RFCOMM_CHANNEL;
 
         // Override default options with user-specified ones
         if (cvalue != NULL)
             options->channel = std::stoi(cvalue);
 
         return 0;
-    }
-
-    // Print MAC address and name of remote bluetooth device.
-    void print_remote(const bdaddr_t *bdaddr)
-    {
-        const int dev_id = hci_get_route(NULL);
-        const int dd = hci_open_dev(dev_id);
-        char name[248] {};
-        char addr[20] {};
-
-        if (hci_read_remote_name(dd, bdaddr, sizeof(name), name, 0) < 0)
-            strcpy(name, "[unknown]");
-        ba2str(bdaddr, addr);
-        printf("Accepted connection from %s %s\n", addr, name);
-        close(dd);
-    }
-
-    // Write N bytes of BUF to FD. Return 0 on success, or -1 on error.
-    int write_bytes(int fd, const void *buf, ssize_t n)
-    {
-        // Because the number of bytes actually written may be less
-        // than the number of bytes we want to write, we need a loop
-        // to write all of the bytes.
-        for (ssize_t total {}, actual {}; total < n; total += actual) {
-            actual = write(fd, (const uint8_t *) buf + total, n - total);
-            if (actual < 1)
-                return -1;
-        }
-
-        return 0;
-    }
-
-    // Read header lines from CFD and return them. Newlines are discarded.
-    vector<string> read_headers(int cfd)
-    {
-        const int max_length {1024}; // guard against malformed input
-        int count {};
-        char current {}, previous {};
-        vector<string> headers;
-        string header;
-
-        while (count < max_length && read(cfd, &current, 1) == 1) {
-            count++;
-            if (current != '\n') {
-                header += current;
-            }
-            else {
-                if (previous != '\n') {
-                    headers.push_back(header);
-                    header.clear();
-                }
-                else {
-                    return headers;
-                }
-            }
-            previous = current;
-        }
-
-        return {}; // return empty vector on error
-    }
-
-    // Parse HEADERS and return map of key-value pairs.
-    std::map<string, string> parse_headers(const vector<string>& headers)
-    {
-        std::map<string, string> map;
-        for (const auto& h : headers) {
-            const std::size_t index {h.find_first_of(':')};
-            if (index != string::npos) {
-                const string k {h.substr(0, index)};
-                const string v {h.substr(index + 1)};
-                map[k] = v;
-            }
-        }
-        return map;
     }
 
     // Write response headers to CFD. Return 0 on success, or -1 on error.
@@ -159,7 +79,7 @@ namespace {
             snprintf(headers, sizeof(headers), "status:%d\n\n", status_code);
         }
 
-        if (write_bytes(cfd, headers, strlen(headers)) != 0) {
+        if (common::write_bytes(cfd, headers, strlen(headers)) != 0) {
             perror("\nwrite socket");
             return -1;
         }
@@ -229,7 +149,7 @@ namespace {
         ssize_t bytes_done {};
         uint8_t buf[16 * 1024] {};
         while ((bytes_read = read(fin, buf, sizeof(buf))) > 0) {
-            if (write_bytes(cfd, buf, bytes_read) != 0) {
+            if (common::write_bytes(cfd, buf, bytes_read) != 0) {
                 perror("\nwrite socket");
                 close(fin);
                 return -1;
@@ -250,16 +170,19 @@ namespace {
         sockaddr_rc rem_addr {};
         socklen_t opt {sizeof(rem_addr)};
         const int cfd = accept(sfd, (sockaddr *) &rem_addr, &opt);
-        print_remote(&rem_addr.rc_bdaddr);
+
+        // Print address and name of remote bluetooth device
+        const auto [bdaddr, bdname] {common::get_remote_bdname(&rem_addr.rc_bdaddr)};
+        printf("Accepted connection from %s %s\n", bdaddr.c_str(), bdname.c_str());
 
         // Read and parse headers sent by client
-        const auto headers {read_headers(cfd)};
+        const auto headers {common::read_headers(cfd)};
         if (headers.size() == 0) {
             cerr << "read_headers error" << endl;
             close(cfd);
             return -1;
         }
-        const auto map {parse_headers(headers)};
+        const auto map {common::parse_headers(headers)};
         if (map.empty()) {
             cerr << "parse_headers error" << endl;
             close(cfd);
