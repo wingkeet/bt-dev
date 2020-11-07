@@ -15,7 +15,7 @@
 #include "common.h"
 
 namespace {
-    // Everything within this unnamed namespace has internal linkage.
+    // Everything inside this unnamed namespace has internal linkage.
     // The practice of using 'static' is de facto deprecated.
 
     using std::cout;
