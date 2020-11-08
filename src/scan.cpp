@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
     }
 
     for (int i {}; i < num_rsp; i++) {
-        char addr[20] {};
+        char addr[18] {};
         char name[248] {};
 
         ba2str(&ii[i].bdaddr, addr);
