@@ -172,8 +172,10 @@ namespace {
         const int cfd = accept(sfd, (sockaddr *) &rem_addr, &opt);
 
         // Print address and name of remote bluetooth device
-        const auto& [bdaddr, bdname] {common::get_remote_bdname(&rem_addr.rc_bdaddr)};
-        printf("Accepted connection from %s %s\n", bdaddr.c_str(), bdname.c_str());
+        const auto& bdname {common::get_remote_bdname(&rem_addr.rc_bdaddr)};
+        char bdaddr[18] {};
+        ba2str(&rem_addr.rc_bdaddr, bdaddr);
+        printf("Accepted connection from %s %s\n", bdaddr, bdname.c_str());
 
         // Read and parse headers sent by client
         const auto& headers {common::read_headers(cfd)};

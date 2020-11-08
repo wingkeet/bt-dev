@@ -2,20 +2,16 @@
 #include <unistd.h>
 #include "common.h"
 
-// Get string address and friendly name of remote bluetooth device
-std::tuple<std::string, std::string>
-common::get_remote_bdname(const bdaddr_t *bdaddr)
+// Get friendly name of remote bluetooth device
+std::string common::get_remote_bdname(const bdaddr_t *bdaddr)
 {
     const int dev_id = hci_get_route(NULL);
     const int dd = hci_open_dev(dev_id);
-    char addr[20] {};
-    char name[248] {};
-
-    ba2str(bdaddr, addr);
-    if (hci_read_remote_name(dd, bdaddr, sizeof(name), name, 0) < 0)
-        strcpy(name, "[unknown]");
+    char bdname[248] {};
+    if (hci_read_remote_name(dd, bdaddr, sizeof(bdname), bdname, 0) < 0)
+        strcpy(bdname, "[unknown]");
     close(dd);
-    return {addr, name};
+    return bdname;
 }
 
 // Write N bytes of BUF to FD. Return 0 on success, or -1 on error.
