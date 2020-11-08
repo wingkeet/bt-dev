@@ -169,7 +169,8 @@ int main(int argc, char *argv[])
 
     // Print address and name of remote bluetooth device
     const auto& bdname {common::get_remote_bdname(&rem_addr.rc_bdaddr)};
-    printf("Connected to %s %s on channel %u\n", options.bdaddr, bdname.c_str(), rem_addr.rc_channel);
+    printf("Connected to %s %s on channel %u\n",
+        options.bdaddr, bdname.c_str(), rem_addr.rc_channel);
 
     // Get file from remote device
     if (options.pathname != NULL) {

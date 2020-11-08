@@ -5,7 +5,6 @@
 
 #include <map>
 #include <string>
-#include <tuple>
 #include <vector>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
