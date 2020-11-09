@@ -1,4 +1,4 @@
-/**
+/*
  * This program scans nearby Bluetooth devices and displays results
  * in this format: <bdaddr> <device-class> <friendly-name>
  * Example: 11:22:33:44:55:AB 0x5A020C My Phone
