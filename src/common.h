@@ -13,7 +13,7 @@
 
 namespace common
 {
-    inline const uint8_t DEFAULT_RFCOMM_CHANNEL {22};
+    inline constexpr uint8_t DEFAULT_RFCOMM_CHANNEL {22};
 
     std::string get_remote_bdname(const bdaddr_t *bdaddr);
     int write_bytes(int fd, const void *buf, ssize_t n);
