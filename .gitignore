@@ -1,6 +1,5 @@
 info.txt
-bin/*
-!bin/README
+bin/
 transfer/*
 !transfer/README
 .vscode/

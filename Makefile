@@ -1,16 +1,25 @@
-all: bin/scan bin/rfcomm-server bin/btput bin/btget
+CXX=g++
+CXXFLAGS=-std=c++17 -Wall
+LDLIBS=-lbluetooth
+SRCDIR=src
+BINDIR=bin
+TARGETS=$(BINDIR)/scan $(BINDIR)/rfcomm-server $(BINDIR)/btput $(BINDIR)/btget
 
-bin/scan: src/scan.cpp
-	g++ src/scan.cpp -o bin/scan -lbluetooth -std=c++17 -Wall
+all: $(TARGETS)
 
-bin/rfcomm-server: src/rfcomm-server.cpp src/common.cpp src/common.h
-	g++ src/rfcomm-server.cpp src/common.cpp -o bin/rfcomm-server -lbluetooth -std=c++17 -Wall
+$(shell mkdir -p $(BINDIR))
 
-bin/btput: src/btput.cpp src/common.cpp src/common.h
-	g++ src/btput.cpp src/common.cpp -o bin/btput -lbluetooth -std=c++17 -Wall
+$(BINDIR)/scan: $(SRCDIR)/scan.cpp
+	$(CXX) $< -o $@ $(CXXFLAGS) $(LDLIBS)
 
-bin/btget: src/btget.cpp src/common.cpp src/common.h
-	g++ src/btget.cpp src/common.cpp -o bin/btget -lbluetooth -std=c++17 -Wall
+$(BINDIR)/rfcomm-server: $(SRCDIR)/rfcomm-server.cpp $(SRCDIR)/common.cpp $(SRCDIR)/common.h
+	$(CXX) $< $(SRCDIR)/common.cpp -o $@ $(CXXFLAGS) $(LDLIBS)
+
+$(BINDIR)/btput: $(SRCDIR)/btput.cpp $(SRCDIR)/common.cpp $(SRCDIR)/common.h
+	$(CXX) $< $(SRCDIR)/common.cpp -o $@ $(CXXFLAGS) $(LDLIBS)
+
+$(BINDIR)/btget: $(SRCDIR)/btget.cpp $(SRCDIR)/common.cpp $(SRCDIR)/common.h
+	$(CXX) $< $(SRCDIR)/common.cpp -o $@ $(CXXFLAGS) $(LDLIBS)
 
 clean:
-	rm -f bin/scan bin/rfcomm-server bin/btput bin/btget
+	rm -rf $(BINDIR)
