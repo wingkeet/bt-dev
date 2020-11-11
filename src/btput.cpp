@@ -177,12 +177,12 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    // Print address and name of remote bluetooth device
+    // Print address and name of server
     const auto& bdname {common::get_remote_bdname(&rem_addr.rc_bdaddr)};
     printf("Connected to %s %s on channel %u\n",
         options.bdaddr, bdname.c_str(), rem_addr.rc_channel);
 
-    // Send file to remote device
+    // Send file to server
     if (options.pathname != NULL) {
         put_file(sfd, options.pathname);
     }
