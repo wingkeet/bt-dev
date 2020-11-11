@@ -7,18 +7,20 @@ TARGETS=$(BINDIR)/scan $(BINDIR)/rfcomm-server $(BINDIR)/btput $(BINDIR)/btget
 
 all: $(TARGETS)
 
-$(shell mkdir -p $(BINDIR))
-
 $(BINDIR)/scan: $(SRCDIR)/scan.cpp
+	@mkdir -p $(@D)
 	$(CXX) $< -o $@ $(CXXFLAGS) $(LDLIBS)
 
 $(BINDIR)/rfcomm-server: $(SRCDIR)/rfcomm-server.cpp $(SRCDIR)/common.cpp $(SRCDIR)/common.h
+	@mkdir -p $(@D)
 	$(CXX) $< $(SRCDIR)/common.cpp -o $@ $(CXXFLAGS) $(LDLIBS)
 
 $(BINDIR)/btput: $(SRCDIR)/btput.cpp $(SRCDIR)/common.cpp $(SRCDIR)/common.h
+	@mkdir -p $(@D)
 	$(CXX) $< $(SRCDIR)/common.cpp -o $@ $(CXXFLAGS) $(LDLIBS)
 
 $(BINDIR)/btget: $(SRCDIR)/btget.cpp $(SRCDIR)/common.cpp $(SRCDIR)/common.h
+	@mkdir -p $(@D)
 	$(CXX) $< $(SRCDIR)/common.cpp -o $@ $(CXXFLAGS) $(LDLIBS)
 
 clean:
